@@ -14,6 +14,9 @@ CSS_INIT = '<style'
 CSS_FINAL = '</style>'
 isCss = False
 
+SOURCE_INIT = '<link'
+isSources = False
+
 for paramIndex in range(0, len(sys.argv)):
     if (paramIndex == 1):
         url = sys.argv[paramIndex]
@@ -21,6 +24,9 @@ for paramIndex in range(0, len(sys.argv)):
         outputPath = sys.argv[paramIndex]
     elif (paramIndex == 3):
         codesInformation = sys.argv[paramIndex]
+    elif (paramIndex == 4):
+        if (sys.argv[paramIndex] == "y"):
+            isSources = True
 
 if (url == "" or outputPath == "" or codesInformation == ""): sys.exit()
 
@@ -56,6 +62,9 @@ if (isCss):
 initIndex = []
 finalIndex = []
 resultArr = []
+sourceInitIndexes = []
+sourceFinalIndexes = []
+resultCSSSources = []
 
 for keyWord in _keyWords:
     for i in find_all(_pageContent, keyWord[0]):
@@ -64,11 +73,64 @@ for keyWord in _keyWords:
     for i in find_all(_pageContent, keyWord[1]):
         finalIndex.append(i)
 
+if (isSources):
+    for i in find_all(_pageContent, SOURCE_INIT):
+        sourceInitIndexes.append(i)
+
+    for i in find_all(_pageContent, ">"):
+        sourceFinalIndexes.append(i)
+
+    sources = []
+
+    for sourceInitIndex, sourceFinalIndex in zip(sourceInitIndexes, sourceFinalIndexes):
+        sourceInitRange = list(find_all(_pageContent[sourceInitIndex + _pageContent[sourceInitIndex : sourceFinalIndex].find("href") : sourceInitIndex + _pageContent[sourceInitIndex : sourceFinalIndex].find("href") + 120], '"'))
+
+        sources.append(_pageContent[sourceInitIndex + _pageContent[sourceInitIndex : sourceFinalIndex].find("href") + sourceInitRange[0] + 1 : sourceInitIndex + _pageContent[sourceInitIndex : sourceFinalIndex].find("href") + sourceInitRange[1]])
+
+    for source in sources:
+        # print(source)
+        if ("css" not in source):
+            sources.remove(source)
+        else:
+            print(source)
+            if ("http" in source):
+                resultCSSSources.append(source)
+            else:
+                toAddUrl = url[: list(find_all(url, "/"))[2]] + source
+                try:
+                    _page = urllib.request.urlopen(toAddUrl).read().decode("utf8")
+                except:
+                    toAddUrl = url + source
+                finally:
+                    resultCSSSources.append(toAddUrl)
+    
+    if (len(sources) > 0):
+        print("Sources are detected!")
+
 for keyInit, keyFinal in zip(initIndex, finalIndex):
     resultArr.append(_pageContent[keyInit + _pageContent[keyInit : keyFinal].find(">") + 1 : keyFinal])
+print("Main page parsed.")
+
+if (isSources and len(resultCSSSources) > 0):
+    print(resultCSSSources)
+    print("Starting parsing other pages...")
+
+    for source in resultCSSSources:
+        try:
+        # print(source)
+            _page = urllib.request.urlopen(source).read().decode("utf8")
+        except:
+            print("Unexpected error.")
+            sys.exit()
+        print(_page)
+        resultArr.append(_page)
+
 
 with open(outputPath, "w") as file:
     for line in resultArr:
-        file.write(line)
+        try:
+            file.write(line)
+        except:
+            print("We've got some error.")
 
 if (len(resultArr) > 0): print("Data is written.")
