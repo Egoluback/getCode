@@ -1,5 +1,6 @@
 import urllib.request, sys
 
+
 url = ""
 outputPath = ""
 codesInformation = ""
@@ -17,15 +18,15 @@ isCss = False
 SOURCE_INIT = '<link'
 isSources = False
 
-for paramIndex in range(0, len(sys.argv)):
+for paramIndex in range(0, len(sys.argv)): # checking sys arguments
     if (paramIndex == 1):
-        url = sys.argv[paramIndex]
+        url = sys.argv[paramIndex] # url
     elif (paramIndex == 2):
-        outputPath = sys.argv[paramIndex]
+        outputPath = sys.argv[paramIndex] # name of output file
     elif (paramIndex == 3):
-        codesInformation = sys.argv[paramIndex]
+        codesInformation = sys.argv[paramIndex] # languages for parsing(js, css)
     elif (paramIndex == 4):
-        if (sys.argv[paramIndex] == "y"):
+        if (sys.argv[paramIndex] == "y"): # if we should find sources
             isSources = True
 
 if (url == "" or outputPath == "" or codesInformation == ""): sys.exit()
@@ -88,7 +89,6 @@ if (isSources):
         sources.append(_pageContent[sourceInitIndex + _pageContent[sourceInitIndex : sourceFinalIndex].find("href") + sourceInitRange[0] + 1 : sourceInitIndex + _pageContent[sourceInitIndex : sourceFinalIndex].find("href") + sourceInitRange[1]])
 
     for source in sources:
-        # print(source)
         if ("css" not in source):
             sources.remove(source)
         else:
